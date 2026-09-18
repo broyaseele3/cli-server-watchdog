@@ -1,0 +1,34 @@
+name: Watchdog — keep CLI server alive
+run-name: ping CLI server
+
+# Keeps the published AgentOS CLI terminal awake 24/7 by pinging its public
+# health endpoint on a schedule. Designed to survive sandbox idle-hibernation:
+# GitHub Actions runs on GitHub's infra (independent of the user's device).
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'      # every 10 minutes (free tier safe on private repo)
+  workflow_dispatch:             # allows manual "Run workflow" trigger
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping health endpoint
+        run: |
+          URL="https://a9fa96ade93686812.sg.agentos-app.run/health"
+          for i in 1 2 3 4 5; do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "$URL" 2>/dev/null || echo 000)
+            echo "attempt $i -> HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              echo "ALIVE"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "SERVER UNREACHABLE — check the CLI server / publish status"
+          exit 1
