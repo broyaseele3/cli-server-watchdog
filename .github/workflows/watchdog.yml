@@ -7,7 +7,7 @@ run-name: ping CLI server
 
 on:
   schedule:
-    - cron: '*/10 * * * *'      # every 10 minutes (free tier safe on private repo)
+    - cron: '*/5 * * * *'       # every 5 minutes (repo is PUBLIC -> unlimited free Actions minutes)
   workflow_dispatch:             # allows manual "Run workflow" trigger
 
 permissions:
